@@ -5,7 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 enum class Status {
-    Default, Registered, NotRegistered, Login, LogOut, Unauthorized, NotGeneratedToken, NotUpdatedRt
+    Default, Registered, NotRegistered, Login, LogOut, Unauthorized, NotGeneratedToken, NotUpdatedRt, NotFound, InvalidPayload, InvalidToken
 }
 
 @Serializable

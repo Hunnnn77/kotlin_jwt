@@ -1,13 +1,17 @@
 <configuration>
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="STDOUT"
+              class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>
+                [%d{YY-MM-dd-HH:mm:ss} | %thread] %-5level %logger{30} - %msg%n
+            </pattern>
         </encoder>
     </appender>
-    <root level="trace">
-        <appender-ref ref="STDOUT"/>
-    </root>
-    <logger name="org.mongodb.driver.connection" level="ERROR" additivity="true"/>
+    <logger name="org.mongodb.driver.connection" level="INFO" additivity="true"/>
     <logger name="org.eclipse.jetty" level="INFO"/>
     <logger name="io.netty" level="INFO"/>
+    <!--[Trace] - Detailed Logger-->
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
 </configuration>

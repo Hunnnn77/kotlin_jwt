@@ -4,6 +4,8 @@ import com.example.db.Mongo
 import com.example.plugins.*
 import com.example.routing.Config
 import com.example.routing.JwtConfig
+import com.example.util.JwtHandler
+import com.example.util.TimeHandler
 import io.ktor.server.application.*
 
 fun main(args: Array<String>) {
@@ -25,10 +27,13 @@ fun Application.module() {
         realm = environment.config.propertyOrNull("jwt.realm")?.getString() ?: throw getProp("realm"),
         domain = environment.config.propertyOrNull("jwt.domain")?.getString() ?: throw getProp("realm")
     )
+    val timeHandler = TimeHandler()
+    val handler = JwtHandler.getInstance(jwtC)
 
-    configureSecurity(jwtC)
+    configureSecurity(jwtConfig = jwtC, handler = handler)
     configureHTTP()
     configureMonitoring()
     configureSerialization()
-    configureRouting(Mongo.getInstance(c), jwtC)
+    configurePages()
+    configureRouting(mongo = Mongo.getInstance(c), handler = handler, toLocalDateTime = { timeHandler.intoLocalDateTime(it) })
 }

@@ -36,8 +36,13 @@ dependencies {
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 
+    //mongo
     implementation("org.mongodb:mongodb-driver-kotlin-coroutine:4.11.0")
     implementation("org.mongodb:bson-kotlinx:4.11.0")
 
+    //util
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+
+    //handling err
+    implementation("io.ktor:ktor-server-status-pages:$ktor_version")
 }

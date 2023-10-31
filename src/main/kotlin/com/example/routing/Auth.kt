@@ -5,16 +5,17 @@ import com.example.model.Claim
 import com.example.model.ErrResponse
 import com.example.model.OkResponse
 import com.example.model.Status
-import com.example.util.intoLocalDateTime
+import com.example.util.JwtHandler
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.datetime.LocalDateTime
 
 
-fun Routing.auth(mongo: Mongo) {
+fun Routing.auth(mongo: Mongo, handler: JwtHandler, toLocalDateTime: (Long?) -> LocalDateTime) {
     route(Paths.Auth.value) {
         authenticate("jwt") {
             get {
@@ -23,8 +24,8 @@ fun Routing.auth(mongo: Mongo) {
                         HttpStatusCode.OK, OkResponse(
                             Claim(
                                 userName = it.payload.getClaim(Fields.Email.value).asString() ?: "anonymous",
-                                issuedAt = it.issuedAt?.time?.intoLocalDateTime(),
-                                expiredAt = it.expiresAt?.time?.intoLocalDateTime(),
+                                issuedAt = toLocalDateTime(it.issuedAt?.time),
+                                expiredAt = toLocalDateTime(it.expiresAt?.time),
                             )
                         )
                     )
@@ -33,12 +34,10 @@ fun Routing.auth(mongo: Mongo) {
 
             get(Paths.LogOut.value) {
                 call.principal<JWTPrincipal>()?.let {
-                    val email =
-                        it.payload.getClaim(Fields.Email.value).asString() ?: "anonymous"
+                    val email = it.payload.getClaim(Fields.Email.value).asString() ?: "anonymous"
                     mongo.removeRt(email).onFailure {
                         return@get call.respond(
-                            HttpStatusCode.NotImplemented,
-                            ErrResponse(status = Status.NotUpdatedRt)
+                            HttpStatusCode.NotImplemented, ErrResponse(status = Status.NotUpdatedRt)
                         )
                     }.onSuccess {
                         call.respond(HttpStatusCode.OK, OkResponse(status = Status.LogOut, data = null))

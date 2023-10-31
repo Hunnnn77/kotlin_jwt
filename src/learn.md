@@ -12,3 +12,27 @@ data class Body(
     val contentVal: String,
 )
 ```
+
+# custom err
+```kotlin
+data class AuthorizationException(
+    override val message: String? = null,
+    override val cause: Throwable? = null
+) : Throwable(message, cause)
+
+fun Application.statusPages() {
+    install(StatusPages) {
+        exception<Throwable> { call, cause ->
+            when (cause) {
+                is AuthorizationException -> call.respond(
+                    HttpStatusCode.Unauthorized, ExceptionResponse(
+                        AuthorizationException(
+                            message = ""
+                        )
+                    )
+                )
+            }
+        }
+    }
+}
+```
