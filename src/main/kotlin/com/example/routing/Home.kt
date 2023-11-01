@@ -1,10 +1,9 @@
 package com.example.routing
 
+import com.example.config.Paths
 import com.example.db.Mongo
 import com.example.model.*
-import com.example.util.JwtHandler
-import com.example.util.TokenKind
-import com.example.util.checkEmpty
+import com.example.util.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -17,38 +16,43 @@ fun Routing.home(mongo: Mongo, handler: JwtHandler) {
             val signIn = call.receive<AuthBody>()
             if (!signIn.checkEmpty()) {
                 return@post call.respond(
-                    HttpStatusCode.NotImplemented, ErrResponse(status = Status.NotRegistered)
+                    HttpStatusCode.NotImplemented, ErrResponse(message = Status.NotRegistered.name)
                 )
             }
 
             mongo.insertOne(signIn).onSuccess {
                 return@post call.respond(
-                    HttpStatusCode.Created, OkResponse(status = Status.Registered, data = null)
+                    HttpStatusCode.Created, OkResponse(message = Status.Registered.name, data = null)
                 )
             }.onFailure {
                 call.respond(
-                    HttpStatusCode.NotImplemented, ErrResponse(status = Status.NotRegistered, message = it.message)
+                    HttpStatusCode.NotImplemented, ErrResponse(message = it.message)
                 )
             }
         }
 
         post(Paths.LogIn.value) {
             val logIn = call.receive<AuthBody>()
-            val tokens = handler.genToken(logIn, TokenKind.At) to handler.genToken(logIn, TokenKind.Rt)
-            if (tokens.first.isFailure || tokens.second.isFailure) return@post call.respond(
-                HttpStatusCode.NotImplemented, ErrResponse(Status.NotGeneratedToken)
+            if (mongo.findUser(logIn.email) == null) return@post call.respond(
+                HttpStatusCode.NotFound, ErrResponse(message = Status.NotFound.name)
             )
 
-            tokens.first.onSuccess { a ->
-                tokens.second.onSuccess { r ->
+            val (at, rt) = handler.genToken(logIn, TokenKind.At) to handler.genToken(logIn, TokenKind.Rt)
+            if (at.isFailure || rt.isFailure) return@post call.respond(
+                HttpStatusCode.NotImplemented, ErrResponse(message = Status.NotGeneratedToken.name)
+            )
+
+            at.onSuccess { a ->
+                rt.onSuccess { r ->
                     mongo.updateRt(logIn, r).onFailure {
                         return@post call.respond(
                             HttpStatusCode.NotImplemented,
-                            ErrResponse(status = Status.NotUpdatedRt, message = it.message)
+                            ErrResponse(message = it.message)
                         )
                     }.onSuccess {
+                        call.handleCookie(a)
                         call.respond(
-                            HttpStatusCode.OK, OkResponse(status = Status.Login, data = AuthToken(at = a, rt = r))
+                            HttpStatusCode.OK, OkResponse(message = Status.Login.name, data = AuthToken(at = a, rt = r))
                         )
                     }
                 }
@@ -56,5 +60,3 @@ fun Routing.home(mongo: Mongo, handler: JwtHandler) {
         }
     }
 }
-
-

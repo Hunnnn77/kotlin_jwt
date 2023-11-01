@@ -1,12 +1,12 @@
 package com.example.db
 
 import com.example.model.AuthBody
-import com.example.routing.Config
+import com.example.config.Config
+import com.example.model.MongoImplException
 import com.example.util.toUpperFirst
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoClient
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.firstOrNull
 
 class Mongo private constructor(config: Config) {
@@ -20,20 +20,20 @@ class Mongo private constructor(config: Config) {
     private val database = mongoClient.getDatabase(config.db)
     private val collection = database.getCollection<AuthBody>(config.coll)
 
-    private suspend fun findUser(authBody: AuthBody): Boolean {
-        return collection.find(Filters.eq(AuthBody::email.name, authBody.email)).firstOrNull() != null
+    suspend fun findUser(email: String): AuthBody? {
+        return collection.find(Filters.eq(AuthBody::email.name, email)).firstOrNull()
     }
 
-    suspend fun insertOne(authBody: AuthBody): Result<Unit> = coroutineScope {
-        return@coroutineScope try {
-            if (!findUser(authBody)) {
+    suspend fun insertOne(authBody: AuthBody): Result<Unit> {
+        return try {
+            if (findUser(authBody.email) != null) {
+                Result.failure(MongoImplException(message = "existing user".toUpperFirst()))
+            } else {
                 collection.insertOne(authBody)
                 Result.success(Unit)
-            } else {
-                Result.failure(Throwable("existing user".toUpperFirst()))
             }
         } catch (e: Exception) {
-            Result.failure(Throwable(e.message))
+            Result.failure(MongoImplException(message = e.message))
         }
     }
 
@@ -42,7 +42,7 @@ class Mongo private constructor(config: Config) {
             filter = Filters.eq(AuthBody::email.name, authBody.email),
             update = Updates.set(AuthBody::rt.name, rt)
         )
-        return if (res != null) Result.success(Unit) else Result.failure(Throwable("not updated refresh token".toUpperFirst()))
+        return if (res != null) Result.success(Unit) else Result.failure(MongoImplException(message = "not updated refresh token".toUpperFirst()))
     }
 
     suspend fun removeRt(email: String): Result<Unit> {
@@ -50,7 +50,21 @@ class Mongo private constructor(config: Config) {
             filter = Filters.eq(AuthBody::email.name, email),
             update = Updates.set(AuthBody::rt.name, null)
         )
-        return if (res != null) Result.success(Unit) else Result.failure(Throwable("not updated refresh token".toUpperFirst()))
+        return if (res != null) Result.success(Unit) else Result.failure(MongoImplException(message = "not updated refresh token".toUpperFirst()))
+    }
+
+    suspend fun fetchRt(email: String): Result<AuthBody> {
+        return try {
+            findUser(email).let {
+                if (it == null) {
+                    Result.failure(MongoImplException(message = "no user"))
+                } else {
+                    Result.success(it)
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(MongoImplException(message = "failed to fetch rt"))
+        }
     }
 
     fun close() {

@@ -1,10 +1,7 @@
 package com.example.plugins
 
-import com.example.model.ErrResponse
-import com.example.model.Status
-import com.example.routing.AuthorizationException
-import com.example.routing.InvalidPayloadException
-import com.example.routing.InvalidTokenException
+import com.example.model.*
+import com.example.util.toUpperFirst
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.statuspages.*
@@ -14,21 +11,26 @@ import io.ktor.server.response.*
 fun Application.configurePages() {
     install(StatusPages) {
         status(HttpStatusCode.NotFound) { call, status ->
-            call.respond(HttpStatusCode.NotFound, ErrResponse(status = Status.NotFound, message = status.description))
+            call.respond(HttpStatusCode.NotFound, ErrResponse(Status.NotFound.name))
         }
 
         exception<Throwable> { call, cause ->
             when (cause) {
-                is AuthorizationException -> call.respond(
-                    HttpStatusCode.Unauthorized, ErrResponse(Status.Unauthorized, message = cause.message)
-                )
-
                 is InvalidTokenException -> call.respond(
-                    HttpStatusCode.Unauthorized, ErrResponse(Status.InvalidToken, message = cause.message)
+                    HttpStatusCode.Unauthorized, ErrResponse(message = cause.message)
                 )
 
                 is InvalidPayloadException -> call.respond(
-                    HttpStatusCode.Unauthorized, ErrResponse(Status.InvalidPayload, message = cause.message)
+                    HttpStatusCode.Unauthorized, ErrResponse(message = cause.message)
+                )
+
+                is MongoImplException -> call.respond(
+                    HttpStatusCode.BadRequest, ErrResponse(message = cause.message)
+                )
+
+                else -> call.respond(
+                    HttpStatusCode.NotImplemented,
+                    ErrResponse(message = "something went wrong".toUpperFirst())
                 )
             }
         }

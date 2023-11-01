@@ -9,11 +9,15 @@ import io.ktor.server.resources.*
 import io.ktor.server.routing.*
 import kotlinx.datetime.LocalDateTime
 
-fun Application.configureRouting(mongo: Mongo, handler: JwtHandler, toLocalDateTime: (Long?) -> LocalDateTime) {
+fun Application.configureRouting(
+    mongo: Mongo,
+    handler: JwtHandler,
+    toLocalDateTime: (Long?) -> LocalDateTime
+) {
     install(Resources)
     routing {
         home(mongo = mongo, handler = handler)
-        auth(mongo = mongo, handler = handler, toLocalDateTime = toLocalDateTime)
+        auth(mongo = mongo, toLocalDateTime = toLocalDateTime)
     }
 }
 

@@ -1,4 +1,4 @@
-package com.example.routing
+package com.example.config
 
 data class Config(
     val uri: String,

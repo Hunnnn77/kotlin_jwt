@@ -1,6 +1,6 @@
-package com.example.routing
+package com.example.model
 
-data class AuthorizationException(
+data class MongoImplException(
     override val message: String? = null,
     override val cause: Throwable? = null
 ) : Throwable(message, cause)

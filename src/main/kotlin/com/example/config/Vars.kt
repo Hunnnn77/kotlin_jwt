@@ -1,4 +1,4 @@
-package com.example.routing
+package com.example.config
 
 sealed class Paths(val value: String) {
     data object Home : Paths("/")
@@ -8,6 +8,6 @@ sealed class Paths(val value: String) {
     data object LogOut : Paths("/logout")
 }
 
-enum class Fields(val value: String) {
+enum class PayloadFields(val value: String) {
     Email(value = "email")
 }

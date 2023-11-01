@@ -5,18 +5,28 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 enum class Status {
-    Default, Registered, NotRegistered, Login, LogOut, Unauthorized, NotGeneratedToken, NotUpdatedRt, NotFound, InvalidPayload, InvalidToken
+    Default,
+    Registered,
+    NotRegistered,
+    Login,
+    LogOut,
+    NotGeneratedToken,
+    NotUpdatedRt,
+    NotFound,
+    InvalidPayload,
+    InvalidToken,
+    Wrong,
+    Failed
 }
 
 @Serializable
 data class OkResponse<T>(
+    val message: String?,
     val data: T? = null,
-    val status: Status = Status.Default,
 )
 
 @Serializable
 data class ErrResponse(
-    val status: Status,
     val message: String? = null
 )
 
@@ -24,13 +34,6 @@ data class ErrResponse(
 data class AuthToken(
     val at: String,
     val rt: String,
-)
-
-@Serializable
-data class AuthBody(
-    val email: String,
-    val password: String,
-    val rt: String? = null,
 )
 
 @Serializable

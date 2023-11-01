@@ -2,10 +2,11 @@ package com.example
 
 import com.example.db.Mongo
 import com.example.plugins.*
-import com.example.routing.Config
-import com.example.routing.JwtConfig
+import com.example.config.Config
+import com.example.config.JwtConfig
 import com.example.util.JwtHandler
 import com.example.util.TimeHandler
+import configureHeader
 import io.ktor.server.application.*
 
 fun main(args: Array<String>) {
@@ -27,13 +28,19 @@ fun Application.module() {
         realm = environment.config.propertyOrNull("jwt.realm")?.getString() ?: throw getProp("realm"),
         domain = environment.config.propertyOrNull("jwt.domain")?.getString() ?: throw getProp("realm")
     )
+    val mongo = Mongo.getInstance(c)
     val timeHandler = TimeHandler()
     val handler = JwtHandler.getInstance(jwtC)
 
-    configureSecurity(jwtConfig = jwtC, handler = handler)
+    configureSecurity(mongo = mongo, jwtConfig = jwtC, handler = handler)
+    configureHeader()
     configureHTTP()
     configureMonitoring()
     configureSerialization()
     configurePages()
-    configureRouting(mongo = Mongo.getInstance(c), handler = handler, toLocalDateTime = { timeHandler.intoLocalDateTime(it) })
+    configureRouting(
+        mongo = mongo,
+        handler = handler,
+        toLocalDateTime = { timeHandler.intoLocalDateTime(it) }
+    )
 }
