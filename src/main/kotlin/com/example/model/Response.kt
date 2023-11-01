@@ -4,31 +4,31 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-enum class Status {
-    Default,
+enum class ResponseStatus {
+    Ok,
+    NotFound,
     Registered,
-    NotRegistered,
     Login,
     LogOut,
+    ValidationErr,
     NotGeneratedToken,
     NotUpdatedRt,
-    NotFound,
-    InvalidPayload,
-    InvalidToken,
-    Wrong,
-    Failed
+}
+
+interface ResponseModel<T> {
+    val statusOr: T?
 }
 
 @Serializable
-data class OkResponse<T>(
-    val message: String?,
-    val data: T? = null,
-)
+data class OkResponse<T, U>(
+    override val statusOr: T?,
+    val data: U? = null,
+) : ResponseModel<T>
 
 @Serializable
-data class ErrResponse(
-    val message: String? = null
-)
+data class ErrResponse<T>(
+    override val statusOr: T? = null
+) : ResponseModel<T>
 
 @Serializable
 data class AuthToken(

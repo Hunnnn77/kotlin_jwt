@@ -5,7 +5,7 @@ import com.example.db.Mongo
 import com.example.model.Claim
 import com.example.model.ErrResponse
 import com.example.model.OkResponse
-import com.example.model.Status
+import com.example.model.ResponseStatus
 import com.example.util.getEatFromDecoded
 import com.example.util.getEmailFromDecoded
 import com.example.util.getIatFromDecoded
@@ -25,7 +25,7 @@ fun Routing.auth(mongo: Mongo, toLocalDateTime: (Long?) -> LocalDateTime) {
                 call.parseCookie()?.let { at ->
                     call.respond(
                         HttpStatusCode.OK, OkResponse(
-                            message = Status.Default.name,
+                            statusOr = ResponseStatus.Ok,
                             Claim(
                                 userName = getEmailFromDecoded(at),
                                 issuedAt = toLocalDateTime(getIatFromDecoded(at)),
@@ -46,11 +46,11 @@ fun Routing.auth(mongo: Mongo, toLocalDateTime: (Long?) -> LocalDateTime) {
                     val email = getEmailFromDecoded(at)
                     mongo.removeRt(email).onFailure {
                         return@get call.respond(
-                            HttpStatusCode.NotImplemented, ErrResponse(message = Status.NotUpdatedRt.name)
+                            HttpStatusCode.NotImplemented, ErrResponse(statusOr = ResponseStatus.NotUpdatedRt)
                         )
                     }.onSuccess {
                         call.handleCookie("")
-                        call.respond(HttpStatusCode.OK, OkResponse(message = Status.LogOut.name, data = null))
+                        call.respond(HttpStatusCode.OK, OkResponse(statusOr = ResponseStatus.LogOut, data = null))
                     }
                 }
             }

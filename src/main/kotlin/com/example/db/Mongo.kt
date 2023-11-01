@@ -1,6 +1,6 @@
 package com.example.db
 
-import com.example.model.AuthBody
+import com.example.model.Registration
 import com.example.config.Config
 import com.example.model.MongoImplException
 import com.example.util.toUpperFirst
@@ -18,18 +18,18 @@ class Mongo private constructor(config: Config) {
 
     private val mongoClient = MongoClient.create(config.uri)
     private val database = mongoClient.getDatabase(config.db)
-    private val collection = database.getCollection<AuthBody>(config.coll)
+    private val collection = database.getCollection<Registration>(config.coll)
 
-    suspend fun findUser(email: String): AuthBody? {
-        return collection.find(Filters.eq(AuthBody::email.name, email)).firstOrNull()
+    suspend fun findUser(email: String): Registration? {
+        return collection.find(Filters.eq(Registration::email.name, email)).firstOrNull()
     }
 
-    suspend fun insertOne(authBody: AuthBody): Result<Unit> {
+    suspend fun insertOne(registration: Registration): Result<Unit> {
         return try {
-            if (findUser(authBody.email) != null) {
+            if (findUser(registration.email) != null) {
                 Result.failure(MongoImplException(message = "existing user".toUpperFirst()))
             } else {
-                collection.insertOne(authBody)
+                collection.insertOne(registration)
                 Result.success(Unit)
             }
         } catch (e: Exception) {
@@ -37,23 +37,23 @@ class Mongo private constructor(config: Config) {
         }
     }
 
-    suspend fun updateRt(authBody: AuthBody, rt: String): Result<Unit> {
+    suspend fun updateRt(email: String, rt: String): Result<Unit> {
         val res = collection.findOneAndUpdate(
-            filter = Filters.eq(AuthBody::email.name, authBody.email),
-            update = Updates.set(AuthBody::rt.name, rt)
+            filter = Filters.eq(Registration::email.name, email),
+            update = Updates.set(Registration::rt.name, rt)
         )
         return if (res != null) Result.success(Unit) else Result.failure(MongoImplException(message = "not updated refresh token".toUpperFirst()))
     }
 
     suspend fun removeRt(email: String): Result<Unit> {
         val res = collection.findOneAndUpdate(
-            filter = Filters.eq(AuthBody::email.name, email),
-            update = Updates.set(AuthBody::rt.name, null)
+            filter = Filters.eq(Registration::email.name, email),
+            update = Updates.set(Registration::rt.name, null)
         )
         return if (res != null) Result.success(Unit) else Result.failure(MongoImplException(message = "not updated refresh token".toUpperFirst()))
     }
 
-    suspend fun fetchRt(email: String): Result<AuthBody> {
+    suspend fun fetchRt(email: String): Result<Registration> {
         return try {
             findUser(email).let {
                 if (it == null) {

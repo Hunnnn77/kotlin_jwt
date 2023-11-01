@@ -68,7 +68,7 @@ fun Application.configureSecurity(mongo: Mongo, jwtConfig: JwtConfig, handler: J
 
 private suspend fun JWTChallengeContext.refreshTokens(
     handler: JwtHandler,
-    body: AuthBody,
+    body: Registration,
     mongo: Mongo
 ) {
     handler.genToken(body, TokenKind.Rt).onFailure {
@@ -84,7 +84,7 @@ private suspend fun JWTChallengeContext.refreshTokens(
 
 private fun JWTChallengeContext.refreshAtOnly(
     handler: JwtHandler,
-    body: AuthBody
+    body: Registration
 ) {
     handler.genToken(body, TokenKind.At).onFailure {
         throw InvalidTokenException(message = "failed to generate at".toUpperFirst())

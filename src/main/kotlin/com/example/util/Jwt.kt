@@ -4,9 +4,9 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.TokenExpiredException
-import com.example.model.AuthBody
 import com.example.config.PayloadFields
 import com.example.config.JwtConfig
+import com.example.model.BodyModel
 import com.example.model.InvalidTokenException
 
 enum class TokenKind {
@@ -25,13 +25,13 @@ class JwtHandler private constructor(private val jwtConfig: JwtConfig) {
             .build()
 
     fun genToken(
-        signIn: AuthBody, tokenKind: TokenKind
+        body: BodyModel, tokenKind: TokenKind
     ): Result<String> {
         val timeHandler = TimeHandler()
         return try {
             val token =
                 JWT.create().withAudience(jwtConfig.audience).withIssuer(jwtConfig.issuer)
-                    .withClaim(PayloadFields.Email.value, signIn.email).withIssuedAt(timeHandler.issuedAt)
+                    .withClaim(PayloadFields.Email.value, body.email).withIssuedAt(timeHandler.issuedAt)
                     .withExpiresAt(if (tokenKind == TokenKind.At) timeHandler.atTokenExpiration else timeHandler.rtTokenExpiration)
                     .sign(Algorithm.HMAC256(jwtConfig.secret))
             Result.success(token)
